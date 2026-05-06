@@ -26,6 +26,13 @@ def run(cmd: list[str], timeout: int = 5) -> tuple[int, str]:
         return 127, ""
 
 
+def run_powershell(cmd: str, timeout: int = 5) -> tuple[int, str]:
+    for exe in ("powershell", "pwsh"):
+        if shutil.which(exe):
+            return run([exe, "-NoProfile", "-Command", cmd], timeout=timeout)
+    return 127, ""
+
+
 def detect_cpu() -> dict:
     info = {"arch": platform.machine(), "cores_logical": os.cpu_count() or 1}
     sys_plat = sys.platform
@@ -54,13 +61,24 @@ def detect_cpu() -> dict:
             info["model"] = "unknown"
     elif sys_plat == "win32":
         rc, out = run(["wmic", "cpu", "get", "Name,NumberOfCores", "/format:value"])
-        if rc == 0:
+        if rc == 0 and out.strip():
             for line in out.splitlines():
                 if line.startswith("Name="):
                     info["model"] = line.split("=", 1)[1].strip()
                 elif line.startswith("NumberOfCores="):
                     val = line.split("=", 1)[1].strip()
                     info["cores_physical"] = int(val) if val.isdigit() else None
+        if info.get("model") in (None, "unknown") or info.get("cores_physical") is None:
+            rc, out = run_powershell(
+                "Get-CimInstance Win32_Processor | Select-Object -First 1 -Property Name,NumberOfCores | "
+                "ForEach-Object { \"$($_.Name)`n$($_.NumberOfCores)\" }"
+            )
+            if rc == 0 and out.strip():
+                lines = [l.strip() for l in out.splitlines() if l.strip()]
+                if lines:
+                    info["model"] = lines[0]
+                if len(lines) > 1 and lines[1].isdigit():
+                    info["cores_physical"] = int(lines[1])
     info.setdefault("model", "unknown")
     info.setdefault("cores_physical", info["cores_logical"])
     return info
@@ -86,6 +104,11 @@ def detect_ram_gb() -> float:
                 val = line.split("=", 1)[1].strip()
                 if val.isdigit():
                     return round(int(val) / 1024**3, 1)
+        rc, out = run_powershell(
+            "Get-CimInstance Win32_ComputerSystem | Select-Object -ExpandProperty TotalPhysicalMemory"
+        )
+        if rc == 0 and out.strip().isdigit():
+            return round(int(out.strip()) / 1024**3, 1)
     return 0.0
 
 
