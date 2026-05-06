@@ -4,8 +4,8 @@ Settings: `n_threads=8`, `n_ctx=2048`, `n_batch=512`, `n_gpu_layers=0`.
 
 | Model | Load (ms) | TTFT P50/P95 (ms) | TPOT P50/P95 (ms) | E2E P50/P95/P99 (ms) | Decode rate (tok/s) |
 |---|---:|---:|---:|---:|---:|
-| tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf | 1136 | 122 / 137 | 25.9 / 46.4 | 1699 / 1788 / 1807 | 38.6 |
-| tinyllama-1.1b-chat-v1.0.Q2_K.gguf | 255 | 189 / 227 | 20.6 / 27.4 | 1451 / 1936 / 2054 | 48.6 |
+| tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf | 791 | 126 / 137 | 26.6 / 48.3 | 1705 / 1831 / 1849 | 37.6 |
+| tinyllama-1.1b-chat-v1.0.Q2_K.gguf | 246 | 194 / 339 | 21.8 / 26.1 | 1527 / 1884 / 1907 | 45.9 |
 
 ## Observations
 
